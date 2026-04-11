@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
-    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.kapt")
     id("com.google.gms.google-services")
 }
 
@@ -35,10 +36,19 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("org.jetbrains.kotlin:kotlin-metadata-jvm:2.2.0")
+    }
 }
 
 dependencies {
-    // Librerías base de Android (las que ya tenías)
+    // Librerías base de Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -48,24 +58,21 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    // Room — base de datos local (guarda los datos en el móvil)
-    val room_version = "2.6.1"
-    implementation("androidx.room:room-runtime:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
-    ksp("androidx.room:room-compiler:$room_version")
+    // Room — base de datos local (versión 2.7.0 compatible con Kotlin 2.2.0)
+    implementation("androidx.room:room-runtime:2.7.0")
+    implementation("androidx.room:room-ktx:2.7.0")
+    kapt("androidx.room:room-compiler:2.7.0")
 
-    // Firebase — sincronización en la nube entre móviles del hogar
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
-    implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-auth-ktx")
+    // Firebase — sincronización en la nube
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
 
-    // Corrutinas — permite que Room y Firebase trabajen en segundo plano
-    // sin bloquear la pantalla del usuario
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    // Corrutinas
+    implementation(libs.coroutines.android)
 
     // ViewModel y LiveData — arquitectura MVVM
-    // Separa la lógica de la interfaz visual
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.lifecycle.livedata)
+    implementation(libs.lifecycle.runtime)
 }
