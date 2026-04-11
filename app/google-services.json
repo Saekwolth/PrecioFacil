@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "2870176812",
+    "project_id": "preciofacil-6fb74",
+    "storage_bucket": "preciofacil-6fb74.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:2870176812:android:49972ca5b52dbf81107589",
+        "android_client_info": {
+          "package_name": "com.preciofacil.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsjHGv4L1RrVxn7Q5O9yvwDEEL1fTnuiE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
