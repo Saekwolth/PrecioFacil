@@ -177,6 +177,7 @@ class MainActivity : AppCompatActivity() {
     private fun irAlDashboard() {
         // Por ahora simplemente cerramos esta Activity
         // En la próxima fase abriremos DashboardActivity
+        startActivity(android.content.Intent(this, DashboardActivity::class.java))
         finish()
     }
 }
