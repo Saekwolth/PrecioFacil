@@ -1,3 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">PrecioFacil</string>
+
+    <!-- Nombre de la app -->
+    <string name="app_name">PrecioFácil</string>
+
+    <!-- ── PANTALLA DE BIENVENIDA ─────────────────────────────── -->
+    <string name="bienvenida_subtitulo">Controla los precios de tu supermercado\ny ahorra en cada compra</string>
+    <string name="btn_crear_hogar">Crear hogar nuevo</string>
+    <string name="btn_unirse_hogar">Unirme a un hogar existente</string>
+
+    <!-- ── PANTALLA UNIRSE ────────────────────────────────────── -->
+    <string name="unirse_titulo">Unirse al hogar</string>
+    <string name="unirse_descripcion">Introduce el código de 6 caracteres\nque generó el primer móvil del hogar</string>
+    <string name="unirse_hint_codigo">Código del hogar</string>
+    <string name="btn_confirmar_codigo">Confirmar código</string>
+    <string name="btn_volver">Volver</string>
+
+    <!-- ── PANTALLA CARGANDO ──────────────────────────────────── -->
+    <string name="cargando_conectando">Conectando…</string>
+
+    <!-- ── PANTALLA CÓDIGO CREADO ─────────────────────────────── -->
+    <string name="codigo_creado_titulo">¡Hogar creado!</string>
+    <string name="codigo_creado_descripcion">Este es el código de tu hogar.\nCompártelo con los demás móviles\nque quieran ver los mismos datos.</string>
+    <string name="codigo_creado_nota">Puedes consultar este código más adelante\nen Ajustes → Mi hogar</string>
+    <string name="btn_continuar">Empezar a usar PrecioFácil</string>
+
 </resources>

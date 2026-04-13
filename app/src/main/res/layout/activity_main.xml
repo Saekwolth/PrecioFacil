@@ -1,19 +1,292 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
+    <!-- ═══════════════════════════════════════════════════════════
+         PANTALLA 1: BIENVENIDA
+         Se muestra la primera vez que se abre la app
+         ═══════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/pantallasBienvenida"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="visible"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Emoji grande como logo provisional -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🛒"
+            android:textSize="80sp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Nombre de la app -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A2E"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Subtítulo -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bienvenida_subtitulo"
+            android:textSize="16sp"
+            android:textColor="#666666"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:layout_marginBottom="48dp" />
+
+        <!-- Botón: Crear hogar nuevo -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCrearHogar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/btn_crear_hogar"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp"
+            app:cornerRadius="12dp" />
+
+        <!-- Botón: Unirse a hogar existente -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnUnirseHogar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/btn_unirse_hogar"
+            android:textSize="16sp"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            app:cornerRadius="12dp" />
+
+    </LinearLayout>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         PANTALLA 2: UNIRSE A HOGAR (introducir código)
+         Se muestra al pulsar "Unirse a hogar existente"
+         ═══════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/pantallaUnirse"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏠"
+            android:textSize="64sp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/unirse_titulo"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A2E"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/unirse_descripcion"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Campo para introducir el código -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/unirse_hint_codigo"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_marginBottom="8dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/inputCodigo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapCharacters"
+                android:maxLength="6"
+                android:letterSpacing="0.3"
+                android:textSize="24sp"
+                android:gravity="center"
+                android:textStyle="bold" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Mensaje de error (se muestra si el código es incorrecto) -->
+        <TextView
+            android:id="@+id/txtError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#D32F2F"
+            android:textSize="14sp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="24dp"
+            android:visibility="gone" />
+
+        <!-- Botón confirmar -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConfirmarCodigo"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/btn_confirmar_codigo"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp"
+            app:cornerRadius="12dp" />
+
+        <!-- Volver atrás -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnVolverBienvenida"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/btn_volver"
+            android:textSize="16sp"
+            style="@style/Widget.Material3.Button.TextButton" />
+
+    </LinearLayout>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         PANTALLA 3: CARGANDO
+         Se muestra mientras se conecta con Firebase
+         ═══════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/pantallaCargando"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ProgressBar
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:id="@+id/txtCargando"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cargando_conectando"
+            android:textSize="16sp"
+            android:textColor="#666666"
+            android:layout_gravity="center" />
+
+    </LinearLayout>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         PANTALLA 4: HOGAR CREADO (mostrar código al usuario)
+         ═══════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/pantallaCodigoCreado"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✅"
+            android:textSize="64sp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/codigo_creado_titulo"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A2E"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/codigo_creado_descripcion"
+            android:textSize="14sp"
+            android:textColor="#666666"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:layout_marginBottom="32dp" />
+
+        <!-- El código generado, grande y visible -->
+        <TextView
+            android:id="@+id/txtCodigoGenerado"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="------"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:textColor="#2E7D32"
+            android:letterSpacing="0.3"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/codigo_creado_nota"
+            android:textSize="12sp"
+            android:textColor="#999999"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:layout_marginBottom="40dp" />
+
+        <!-- Botón para continuar a la app -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnContinuar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/btn_continuar"
+            android:textSize="16sp"
+            app:cornerRadius="12dp" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
