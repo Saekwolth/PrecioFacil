@@ -1,5 +1,6 @@
 package com.preciofacil.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -12,17 +13,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.snackbar.Snackbar
 import com.preciofacil.app.data.remote.HogarManager
 
 /**
  * DashboardActivity — pantalla principal de PrecioFácil.
  *
- * Muestra:
- *  - Código del hogar activo
- *  - Gasto del mes (por ahora en 0, se llenará en fases siguientes)
- *  - Alertas recientes (por ahora vacío)
- *  - Lista de supermercados guardados en la base de datos
- *  - Accesos rápidos a otras secciones
+ * Muestra datos reales desde Room:
+ *  - Gasto del mes en curso
+ *  - Número de tickets este mes
+ *  - Último ticket escaneado
+ *  - Lista de supermercados configurados
  */
 class DashboardActivity : AppCompatActivity() {
 
@@ -43,7 +44,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var txtSinSupermercados: TextView
 
     // ── VIEWMODEL Y ADAPTER ───────────────────────────────────────────
-    private lateinit var viewModel: SupermercadoViewModel
+    private lateinit var viewModel: DashboardViewModel
     private lateinit var adapter: SupermercadoAdapter
 
     // ─────────────────────────────────────────────────────────────────
@@ -59,13 +60,20 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         hogarManager = HogarManager(this)
-        viewModel = ViewModelProvider(this)[SupermercadoViewModel::class.java]
+        viewModel = ViewModelProvider(this)[DashboardViewModel::class.java]
 
         inicializarVistas()
         configurarListaSupermercados()
         mostrarDatosHogar()
         configurarBotones()
-        observarSupermercados()
+        observarDatos()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Recargar datos cada vez que se vuelve al Dashboard
+        // (por ejemplo, después de confirmar un ticket)
+        viewModel.cargarDatosMes()
     }
 
     // ── INICIALIZACIÓN ────────────────────────────────────────────────
@@ -95,20 +103,13 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun mostrarDatosHogar() {
         val codigo = hogarManager.obtenerCodigoHogar()
-        if (codigo != null) {
-            txtCodigoHogar.text = "Hogar: $codigo"
-        } else {
-            txtCodigoHogar.text = "Hogar: no configurado"
-        }
+        txtCodigoHogar.text = if (codigo != null) "Hogar: $codigo" else "Hogar: no configurado"
     }
 
-    // ── OBSERVAR DATOS ────────────────────────────────────────────────
+    // ── OBSERVAR DATOS REALES ─────────────────────────────────────────
 
-    /**
-     * Se suscribe a la lista de supermercados de la base de datos.
-     * Cada vez que cambia la BD, la pantalla se actualiza automáticamente.
-     */
-    private fun observarSupermercados() {
+    private fun observarDatos() {
+        // Supermercados
         viewModel.supermercados.observe(this) { lista ->
             if (lista.isNullOrEmpty()) {
                 listaSupermercados.visibility = View.GONE
@@ -120,13 +121,32 @@ class DashboardActivity : AppCompatActivity() {
                 adapter.actualizarLista(lista)
             }
         }
+
+        // Gasto del mes
+        viewModel.gastoMes.observe(this) { gasto ->
+            txtGastoMes.text = "${"%.2f".format(gasto)} €"
+        }
+
+        // Número de tickets
+        viewModel.numTickets.observe(this) { num ->
+            txtNumTickets.text = when (num) {
+                0 -> "Sin tickets este mes"
+                1 -> "1 ticket este mes"
+                else -> "$num tickets este mes"
+            }
+        }
+
+        // Último ticket
+        viewModel.ultimoTicket.observe(this) { texto ->
+            txtAlertas.text = texto
+        }
     }
 
     // ── BOTONES ───────────────────────────────────────────────────────
 
     private fun configurarBotones() {
         btnEscanear.setOnClickListener {
-            startActivity(android.content.Intent(this, EscaneoActivity::class.java))
+            startActivity(Intent(this, EscaneoActivity::class.java))
         }
 
         cardCatalogo.setOnClickListener {
@@ -145,8 +165,6 @@ class DashboardActivity : AppCompatActivity() {
     // ── UTILIDADES ────────────────────────────────────────────────────
 
     private fun mostrarMensajeTemporal(mensaje: String) {
-        com.google.android.material.snackbar.Snackbar
-            .make(findViewById(android.R.id.content), mensaje, com.google.android.material.snackbar.Snackbar.LENGTH_SHORT)
-            .show()
+        Snackbar.make(findViewById(android.R.id.content), mensaje, Snackbar.LENGTH_SHORT).show()
     }
 }
