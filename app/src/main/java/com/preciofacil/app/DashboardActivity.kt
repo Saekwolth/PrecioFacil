@@ -152,7 +152,7 @@ class DashboardActivity : AppCompatActivity() {
             mostrarMensajeTemporal("Catálogo de productos — próximamente")
         }
         cardEstadisticas.setOnClickListener {
-            mostrarMensajeTemporal("Estadísticas — próximamente")
+            startActivity(android.content.Intent(this, EstadisticasActivity::class.java))
         }
         cardAjustes.setOnClickListener {
             mostrarMensajeTemporal("Ajustes — próximamente")

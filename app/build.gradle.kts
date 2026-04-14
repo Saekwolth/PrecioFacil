@@ -51,7 +51,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    // Room — base de datos local (versión 2.7.0 compatible con Kotlin 2.2.0)
+    // Room — base de datos local
     implementation("androidx.room:room-runtime:2.7.0")
     implementation("androidx.room:room-ktx:2.7.0")
     kapt("androidx.room:room-compiler:2.7.0")
@@ -67,4 +67,6 @@ dependencies {
     implementation(libs.lifecycle.runtime)
     // Google ML Kit — OCR para leer texto de los tickets
     implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+    // MPAndroidChart — gráficas de estadísticas
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

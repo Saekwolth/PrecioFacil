@@ -22,5 +22,6 @@
         <activity android:name=".DashboardActivity" android:exported="false" />
         <activity android:name=".EscaneoActivity" android:exported="false" />
         <activity android:name=".RevisionActivity" android:exported="false" />
+        <activity android:name=".EstadisticasActivity" android:exported="false" />
     </application>
 </manifest>

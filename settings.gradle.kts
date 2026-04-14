@@ -19,8 +19,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // JitPack — necesario para MPAndroidChart
+        maven { url = uri("https://jitpack.io") }
     }
 }
-
 rootProject.name = "PrecioFacil"
 include(":app")
