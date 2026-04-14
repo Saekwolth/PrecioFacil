@@ -125,7 +125,7 @@ class EscaneoActivity : AppCompatActivity() {
         }
         sb.appendLine("─────────────────────────────")
         if (resultado.totalTicket > 0) sb.appendLine("TOTAL: ${"%.2f".format(resultado.totalTicket)} €")
-        txtResultadoOCR.text = sb.toString()
+        txtResultadoOCR.text = sb.toString() + "\n\n═══ TEXTO CRUDO ═══\n" + resultado.textoOriginal
         cardResultado.visibility = View.VISIBLE
     }
 
