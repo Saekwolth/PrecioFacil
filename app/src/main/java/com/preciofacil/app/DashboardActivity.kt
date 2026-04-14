@@ -126,7 +126,7 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun configurarBotones() {
         btnEscanear.setOnClickListener {
-            mostrarMensajeTemporal("Escaneo de tickets — próximamente")
+            startActivity(android.content.Intent(this, EscaneoActivity::class.java))
         }
 
         cardCatalogo.setOnClickListener {
