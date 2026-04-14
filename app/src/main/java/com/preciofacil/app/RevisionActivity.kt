@@ -7,22 +7,23 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
+import com.preciofacil.app.data.local.database.PrecioFacilDatabase
+import com.preciofacil.app.data.remote.HogarManager
 import com.preciofacil.app.parser.ProductoDetectado
 import com.preciofacil.app.parser.ResultadoParser
+import com.preciofacil.app.usecase.GuardadoTicketUseCase
+import kotlinx.coroutines.launch
 
 /**
  * RevisionActivity — pantalla de revisión del ticket escaneado.
  *
- * Muestra cada producto detectado por el parser en una tarjeta editable.
- * El usuario puede:
- *   - Corregir el nombre si el OCR lo leyó mal
- *   - Corregir el precio
- *   - Marcar una línea como "no es producto" para ignorarla
- *   - Confirmar para guardar todo en la base de datos
+ * El usuario revisa, corrige y confirma los productos detectados.
+ * Al confirmar, se guarda todo en Room (ticket + líneas + precios).
  */
 class RevisionActivity : AppCompatActivity() {
 
@@ -33,13 +34,10 @@ class RevisionActivity : AppCompatActivity() {
     private lateinit var contenedorProductos: LinearLayout
     private lateinit var btnConfirmar: MaterialButton
 
-    // Datos recibidos del parser
     private var resultadoParser: ResultadoParser? = null
 
-    // Lista de vistas de productos (para leer los valores editados)
     private val vistasProductos = mutableListOf<VistaProducto>()
 
-    // Estructura para guardar referencia a cada tarjeta de producto
     data class VistaProducto(
         val productoOriginal: ProductoDetectado,
         val editNombre: TextInputEditText,
@@ -50,6 +48,7 @@ class RevisionActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_RESULTADO_PARSER = "extra_resultado_parser"
+        const val EXTRA_SUPERMERCADO_ID = "extra_supermercado_id"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,7 +57,6 @@ class RevisionActivity : AppCompatActivity() {
 
         inicializarVistas()
 
-        // Recibir el resultado del parser desde EscaneoActivity
         @Suppress("DEPRECATION")
         resultadoParser = intent.getSerializableExtra(EXTRA_RESULTADO_PARSER) as? ResultadoParser
 
@@ -94,30 +92,22 @@ class RevisionActivity : AppCompatActivity() {
         txtResumen.text = "${resultado.productos.size} productos detectados"
         txtTotal.text = if (resultado.totalTicket > 0) {
             "${"%.2f".format(resultado.totalTicket)} €"
-        } else {
-            "—"
-        }
+        } else "—"
 
-        // Crear una tarjeta por cada producto
         vistasProductos.clear()
         contenedorProductos.removeAllViews()
-
-        resultado.productos.forEach { producto ->
-            agregarTarjetaProducto(producto)
-        }
+        resultado.productos.forEach { agregarTarjetaProducto(it) }
     }
 
     private fun agregarTarjetaProducto(producto: ProductoDetectado) {
-        val inflater = LayoutInflater.from(this)
-        val vista = inflater.inflate(R.layout.item_producto_revision, contenedorProductos, false)
+        val vista = LayoutInflater.from(this)
+            .inflate(R.layout.item_producto_revision, contenedorProductos, false)
 
         val txtEAN = vista.findViewById<TextView>(R.id.txtEAN)
         val editNombre = vista.findViewById<TextInputEditText>(R.id.editNombre)
         val editPrecio = vista.findViewById<TextInputEditText>(R.id.editPrecio)
         val btnEliminar = vista.findViewById<MaterialButton>(R.id.btnEliminar)
-        val card = vista.findViewById<View>(R.id.cardProducto)
 
-        // Rellenar con los datos del parser
         txtEAN.text = "EAN: ${producto.ean}"
         editNombre.setText(producto.nombre)
         editPrecio.setText(if (producto.precio != 0.0) "%.2f".format(producto.precio) else "")
@@ -130,19 +120,15 @@ class RevisionActivity : AppCompatActivity() {
         )
         vistasProductos.add(vistaProducto)
 
-        // Botón "No es producto" — atenúa la tarjeta y la marca para ignorar
         btnEliminar.setOnClickListener {
             val idx = vistasProductos.indexOf(vistaProducto)
             if (idx >= 0) {
-                val descartado = vistasProductos[idx].descartado
-                vistasProductos[idx] = vistasProductos[idx].copy(descartado = !descartado)
-
-                if (!descartado) {
-                    // Marcar como descartado — atenuar
+                val estaDescartado = vistasProductos[idx].descartado
+                vistasProductos[idx] = vistasProductos[idx].copy(descartado = !estaDescartado)
+                if (!estaDescartado) {
                     vista.alpha = 0.4f
                     btnEliminar.text = "↩ Restaurar"
                 } else {
-                    // Restaurar
                     vista.alpha = 1.0f
                     btnEliminar.text = "✕ No es producto"
                 }
@@ -155,6 +141,8 @@ class RevisionActivity : AppCompatActivity() {
     // ── CONFIRMAR Y GUARDAR ───────────────────────────────────────────
 
     private fun confirmarYGuardar() {
+        val resultado = resultadoParser ?: return
+
         val productosConfirmados = vistasProductos
             .filter { !it.descartado }
             .map { vista ->
@@ -177,18 +165,53 @@ class RevisionActivity : AppCompatActivity() {
             return
         }
 
-        // TODO Fase 4E: aquí se guardarán en Room
-        // Por ahora mostramos un mensaje de éxito
-        val mensaje = "✅ ${productosConfirmados.size} productos listos para guardar"
+        btnConfirmar.isEnabled = false
+        btnConfirmar.text = "Guardando..."
+
+        lifecycleScope.launch {
+            try {
+                val db = PrecioFacilDatabase.getInstance(applicationContext)
+                val hogarManager = HogarManager(applicationContext)
+
+                val useCase = GuardadoTicketUseCase(
+                    ticketDao = db.ticketDao(),
+                    lineaTicketDao = db.lineaTicketDao(),
+                    productoDao = db.productoDao(),
+                    registroPrecioDao = db.registroPrecioDao(),
+                    hogarManager = hogarManager
+                )
+
+                // Usar el ID del supermercado Caprabo La Massana (ID 1, creado por DatabaseSeeder)
+                // En fases posteriores el usuario podrá elegir el supermercado
+                val supermercadoId = 1L
+
+                val ticketId = useCase.guardar(
+                    supermercadoId = supermercadoId,
+                    totalTicket = resultado.totalTicket,
+                    textoOcr = resultado.textoOriginal,
+                    productos = productosConfirmados
+                )
+
+                mostrarExito(productosConfirmados.size, ticketId)
+
+            } catch (e: Exception) {
+                mostrarError("Error al guardar: ${e.message}")
+                btnConfirmar.isEnabled = true
+                btnConfirmar.text = "💾  Confirmar y guardar"
+            }
+        }
+    }
+
+    private fun mostrarExito(numProductos: Int, ticketId: Long) {
+        val mensaje = "✅ Ticket guardado: $numProductos productos (ID: $ticketId)"
         Snackbar.make(findViewById(android.R.id.content), mensaje, Snackbar.LENGTH_LONG).show()
 
-        // Volver al Dashboard después de un momento
         btnConfirmar.postDelayed({
             val intent = Intent(this, DashboardActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(intent)
             finish()
-        }, 1500)
+        }, 2000)
     }
 
     private fun mostrarError(mensaje: String) {
