@@ -8,7 +8,7 @@
     android:background="#F5F5F5"
     tools:context=".DashboardActivity">
 
-    <!-- ── BARRA SUPERIOR ──────────────────────────────────────── -->
+    <!-- ── BARRA SUPERIOR ──────────────────────────────────────────── -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -25,7 +25,7 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- ── CONTENIDO PRINCIPAL ─────────────────────────────────── -->
+    <!-- ── CONTENIDO PRINCIPAL ─────────────────────────────────────── -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- ── TARJETA: BIENVENIDA / ESTADO ─────────────────── -->
+            <!-- ── TARJETA: BIENVENIDA / ESTADO ──────────────────── -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -87,7 +87,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ── TARJETA: GASTO DEL MES ────────────────────────── -->
+            <!-- ── TARJETA: GASTO DEL MES ─────────────────────────── -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -131,7 +131,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ── TARJETA: ALERTAS ──────────────────────────────── -->
+            <!-- ── TARJETA: ALERTAS ───────────────────────────────── -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -166,7 +166,36 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ── ACCESOS RÁPIDOS ───────────────────────────────── -->
+            <!-- ── SECCIÓN: MIS SUPERMERCADOS ─────────────────────── -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏪  Mis supermercados"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Lista de supermercados (se rellena desde código) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/listaSupermercados"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Mensaje cuando no hay supermercados -->
+            <TextView
+                android:id="@+id/txtSinSupermercados"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cargando supermercados..."
+                android:textSize="13sp"
+                android:textColor="#999999"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone" />
+
+            <!-- ── ACCESOS RÁPIDOS ─────────────────────────────────── -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

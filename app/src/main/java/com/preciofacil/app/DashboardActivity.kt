@@ -1,10 +1,14 @@
 package com.preciofacil.app
 
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
@@ -13,15 +17,18 @@ import com.preciofacil.app.data.remote.HogarManager
 /**
  * DashboardActivity — pantalla principal de PrecioFácil.
  *
- * Es lo primero que ve el usuario después de configurar el hogar.
- * Por ahora muestra el resumen básico. En próximas fases se irá
- * llenando con datos reales de tickets y alertas.
+ * Muestra:
+ *  - Código del hogar activo
+ *  - Gasto del mes (por ahora en 0, se llenará en fases siguientes)
+ *  - Alertas recientes (por ahora vacío)
+ *  - Lista de supermercados guardados en la base de datos
+ *  - Accesos rápidos a otras secciones
  */
 class DashboardActivity : AppCompatActivity() {
 
     private lateinit var hogarManager: HogarManager
 
-    // ── VISTAS ────────────────────────────────────────────────────
+    // ── VISTAS ────────────────────────────────────────────────────────
     private lateinit var toolbar: MaterialToolbar
     private lateinit var txtSaludo: TextView
     private lateinit var txtCodigoHogar: TextView
@@ -32,8 +39,14 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var cardCatalogo: MaterialCardView
     private lateinit var cardEstadisticas: MaterialCardView
     private lateinit var cardAjustes: MaterialCardView
+    private lateinit var listaSupermercados: RecyclerView
+    private lateinit var txtSinSupermercados: TextView
 
-    // ─────────────────────────────────────────────────────────────
+    // ── VIEWMODEL Y ADAPTER ───────────────────────────────────────────
+    private lateinit var viewModel: SupermercadoViewModel
+    private lateinit var adapter: SupermercadoAdapter
+
+    // ─────────────────────────────────────────────────────────────────
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,13 +59,16 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         hogarManager = HogarManager(this)
+        viewModel = ViewModelProvider(this)[SupermercadoViewModel::class.java]
 
         inicializarVistas()
+        configurarListaSupermercados()
         mostrarDatosHogar()
         configurarBotones()
+        observarSupermercados()
     }
 
-    // ── INICIALIZACIÓN ────────────────────────────────────────────
+    // ── INICIALIZACIÓN ────────────────────────────────────────────────
 
     private fun inicializarVistas() {
         toolbar = findViewById(R.id.toolbar)
@@ -65,8 +81,16 @@ class DashboardActivity : AppCompatActivity() {
         cardCatalogo = findViewById(R.id.cardCatalogo)
         cardEstadisticas = findViewById(R.id.cardEstadisticas)
         cardAjustes = findViewById(R.id.cardAjustes)
+        listaSupermercados = findViewById(R.id.listaSupermercados)
+        txtSinSupermercados = findViewById(R.id.txtSinSupermercados)
 
         setSupportActionBar(toolbar)
+    }
+
+    private fun configurarListaSupermercados() {
+        adapter = SupermercadoAdapter()
+        listaSupermercados.layoutManager = LinearLayoutManager(this)
+        listaSupermercados.adapter = adapter
     }
 
     private fun mostrarDatosHogar() {
@@ -78,9 +102,30 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
+    // ── OBSERVAR DATOS ────────────────────────────────────────────────
+
+    /**
+     * Se suscribe a la lista de supermercados de la base de datos.
+     * Cada vez que cambia la BD, la pantalla se actualiza automáticamente.
+     */
+    private fun observarSupermercados() {
+        viewModel.supermercados.observe(this) { lista ->
+            if (lista.isNullOrEmpty()) {
+                listaSupermercados.visibility = View.GONE
+                txtSinSupermercados.visibility = View.VISIBLE
+                txtSinSupermercados.text = "No hay supermercados configurados."
+            } else {
+                listaSupermercados.visibility = View.VISIBLE
+                txtSinSupermercados.visibility = View.GONE
+                adapter.actualizarLista(lista)
+            }
+        }
+    }
+
+    // ── BOTONES ───────────────────────────────────────────────────────
+
     private fun configurarBotones() {
         btnEscanear.setOnClickListener {
-            // Próxima fase: abrir cámara para escanear ticket
             mostrarMensajeTemporal("Escaneo de tickets — próximamente")
         }
 
@@ -97,7 +142,7 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    // ── UTILIDADES ────────────────────────────────────────────────
+    // ── UTILIDADES ────────────────────────────────────────────────────
 
     private fun mostrarMensajeTemporal(mensaje: String) {
         com.google.android.material.snackbar.Snackbar
