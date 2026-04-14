@@ -21,6 +21,9 @@ import com.preciofacil.app.parser.ParserCaprabo
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
+/**
+ * EscaneoActivity — selecciona foto, hace OCR y lanza la pantalla de revisión.
+ */
 class EscaneoActivity : AppCompatActivity() {
 
     private lateinit var toolbar: MaterialToolbar
@@ -95,12 +98,25 @@ class EscaneoActivity : AppCompatActivity() {
                 val reconocedor = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
                 val resultado = reconocedor.process(imagen).await()
                 val textoExtraido = resultado.text
+
                 if (textoExtraido.isBlank()) {
                     mostrarError("No se encontró texto en la imagen.")
                     return@launch
                 }
+
+                // Parser de Caprabo
                 val resultadoParser = ParserCaprabo.parsear(textoExtraido)
-                mostrarProductosDetectados(resultadoParser)
+
+                if (resultadoParser.productos.isEmpty()) {
+                    mostrarError("No se detectaron productos. Intenta con otra foto.")
+                    return@launch
+                }
+
+                // Abrir pantalla de revisión
+                val intent = Intent(this@EscaneoActivity, RevisionActivity::class.java)
+                intent.putExtra(RevisionActivity.EXTRA_RESULTADO_PARSER, resultadoParser)
+                startActivity(intent)
+
             } catch (e: Exception) {
                 mostrarError("No se pudo leer el ticket: ${e.message}")
             } finally {
@@ -108,25 +124,6 @@ class EscaneoActivity : AppCompatActivity() {
                 btnProcesar.isEnabled = true
             }
         }
-    }
-
-    private fun mostrarProductosDetectados(resultado: com.preciofacil.app.parser.ResultadoParser) {
-        val sb = StringBuilder()
-        sb.appendLine("Supermercado: ${resultado.supermercado}")
-        sb.appendLine("─────────────────────────────")
-        sb.appendLine("${resultado.productos.size} productos detectados:")
-        sb.appendLine()
-        resultado.productos.forEachIndexed { idx, producto ->
-            sb.appendLine("${idx + 1}. ${producto.nombre}")
-            sb.appendLine("   EAN: ${producto.ean}")
-            val precioTexto = if (producto.precio != 0.0) "${"%.2f".format(producto.precio)} €" else "(pendiente)"
-            sb.appendLine("   Precio: $precioTexto")
-            sb.appendLine()
-        }
-        sb.appendLine("─────────────────────────────")
-        if (resultado.totalTicket > 0) sb.appendLine("TOTAL: ${"%.2f".format(resultado.totalTicket)} €")
-        txtResultadoOCR.text = sb.toString() + "\n\n═══ TEXTO CRUDO ═══\n" + resultado.textoOriginal
-        cardResultado.visibility = View.VISIBLE
     }
 
     private fun mostrarError(mensaje: String) {

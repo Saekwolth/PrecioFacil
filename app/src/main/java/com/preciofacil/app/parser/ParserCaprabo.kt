@@ -1,29 +1,21 @@
 package com.preciofacil.app.parser
 
+import java.io.Serializable
+
 data class ProductoDetectado(
     val nombre: String,
     val ean: String,
     val precio: Double,
     val esDescuento: Boolean = false
-)
+) : Serializable
 
 data class ResultadoParser(
     val supermercado: String,
     val productos: List<ProductoDetectado>,
     val totalTicket: Double,
     val textoOriginal: String
-)
+) : Serializable
 
-/**
- * ParserCaprabo v2 — robusto frente al OCR caótico de tickets largos.
- *
- * Estrategia:
- *  - En lugar de buscar una zona de inicio, recorre TODO el texto
- *  - Cada vez que encuentra un EAN válido (Ref: + 13 dígitos), busca el nombre
- *    en las líneas anteriores
- *  - Los precios se recogen de las líneas sueltas con formato decimal
- *  - Se ignoran EANs con letras pegadas (Ref: 8480010359276E → se limpia)
- */
 object ParserCaprabo {
 
     // Líneas que nunca son nombres de producto
