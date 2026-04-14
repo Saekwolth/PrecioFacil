@@ -5,9 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.preciofacil.app.data.local.database.PrecioFacilDatabase
+import com.preciofacil.app.data.local.entity.Alerta
 import com.preciofacil.app.data.local.entity.Supermercado
 import com.preciofacil.app.data.remote.HogarManager
 import com.preciofacil.app.data.repository.SupermercadoRepository
@@ -15,14 +15,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-/**
- * DashboardViewModel — proporciona todos los datos de la pantalla principal.
- *
- * - Lista de supermercados (en tiempo real desde Room)
- * - Gasto total del mes en curso
- * - Número de tickets este mes
- * - Último ticket escaneado
- */
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = PrecioFacilDatabase.getInstance(application)
@@ -30,6 +22,9 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     // ── Supermercados en tiempo real ──────────────────────────────────
     val supermercados: LiveData<List<Supermercado>>
+
+    // ── Alertas no leídas en tiempo real ─────────────────────────────
+    val alertasNoLeidas: LiveData<List<Alerta>>
 
     // ── Datos del mes ─────────────────────────────────────────────────
     private val _gastoMes = MutableLiveData(0.0)
@@ -45,7 +40,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         val dao = db.supermercadoDao()
         val repo = SupermercadoRepository(dao, hogarManager)
         supermercados = repo.obtenerTodos().asLiveData()
-
+        alertasNoLeidas = db.alertaDao().obtenerNoLeidas().asLiveData()
         cargarDatosMes()
     }
 
@@ -60,13 +55,11 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             }.timeInMillis
             val ahora = System.currentTimeMillis()
 
-            // Gasto y número de tickets del mes
             val gasto = db.ticketDao().calcularGastoTotal(inicioMes, ahora) ?: 0.0
             val num = db.ticketDao().contarEntreFechas(inicioMes, ahora)
             _gastoMes.postValue(gasto)
             _numTickets.postValue(num)
 
-            // Último ticket
             val tickets = db.ticketDao().obtenerTodos().first()
             if (tickets.isNotEmpty()) {
                 val ultimo = tickets.first()
@@ -74,11 +67,23 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                     .obtenerPorId(ultimo.supermercadoId)?.nombre ?: "Supermercado"
                 val fecha = android.text.format.DateFormat.format("dd/MM/yy", ultimo.fecha)
                 _ultimoTicket.postValue(
-                    "Último ticket: $nombreSuper\n$fecha — ${"%.2f".format(ultimo.total)} €"
+                    "Último: $nombreSuper — $fecha — ${"%.2f".format(ultimo.total)} €"
                 )
             } else {
                 _ultimoTicket.postValue("Escanea tu primer ticket para empezar.")
             }
+        }
+    }
+
+    fun marcarAlertaLeida(alertaId: Long) {
+        viewModelScope.launch {
+            db.alertaDao().marcarComoLeida(alertaId)
+        }
+    }
+
+    fun marcarTodasLeidas() {
+        viewModelScope.launch {
+            db.alertaDao().marcarTodasComoLeidas()
         }
     }
 }

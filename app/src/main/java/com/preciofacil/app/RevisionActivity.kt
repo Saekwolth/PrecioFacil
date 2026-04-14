@@ -19,12 +19,6 @@ import com.preciofacil.app.parser.ResultadoParser
 import com.preciofacil.app.usecase.GuardadoTicketUseCase
 import kotlinx.coroutines.launch
 
-/**
- * RevisionActivity — pantalla de revisión del ticket escaneado.
- *
- * El usuario revisa, corrige y confirma los productos detectados.
- * Al confirmar, se guarda todo en Room (ticket + líneas + precios).
- */
 class RevisionActivity : AppCompatActivity() {
 
     private lateinit var toolbar: MaterialToolbar
@@ -35,7 +29,6 @@ class RevisionActivity : AppCompatActivity() {
     private lateinit var btnConfirmar: MaterialButton
 
     private var resultadoParser: ResultadoParser? = null
-
     private val vistasProductos = mutableListOf<VistaProducto>()
 
     data class VistaProducto(
@@ -48,13 +41,11 @@ class RevisionActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_RESULTADO_PARSER = "extra_resultado_parser"
-        const val EXTRA_SUPERMERCADO_ID = "extra_supermercado_id"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_revision)
-
         inicializarVistas()
 
         @Suppress("DEPRECATION")
@@ -66,7 +57,6 @@ class RevisionActivity : AppCompatActivity() {
             finish()
             return
         }
-
         mostrarDatos(resultado)
     }
 
@@ -77,15 +67,11 @@ class RevisionActivity : AppCompatActivity() {
         txtTotal = findViewById(R.id.txtTotal)
         contenedorProductos = findViewById(R.id.contenedorProductos)
         btnConfirmar = findViewById(R.id.btnConfirmar)
-
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener { finish() }
-
         btnConfirmar.setOnClickListener { confirmarYGuardar() }
     }
-
-    // ── MOSTRAR DATOS ─────────────────────────────────────────────────
 
     private fun mostrarDatos(resultado: ResultadoParser) {
         txtSupermercado.text = "🏪 ${resultado.supermercado}"
@@ -93,7 +79,6 @@ class RevisionActivity : AppCompatActivity() {
         txtTotal.text = if (resultado.totalTicket > 0) {
             "${"%.2f".format(resultado.totalTicket)} €"
         } else "—"
-
         vistasProductos.clear()
         contenedorProductos.removeAllViews()
         resultado.productos.forEach { agregarTarjetaProducto(it) }
@@ -134,11 +119,8 @@ class RevisionActivity : AppCompatActivity() {
                 }
             }
         }
-
         contenedorProductos.addView(vista)
     }
-
-    // ── CONFIRMAR Y GUARDAR ───────────────────────────────────────────
 
     private fun confirmarYGuardar() {
         val resultado = resultadoParser ?: return
@@ -151,7 +133,6 @@ class RevisionActivity : AppCompatActivity() {
                 val precioFinal = vista.editPrecio.text.toString()
                     .replace(",", ".")
                     .toDoubleOrNull() ?: vista.productoOriginal.precio
-
                 ProductoDetectado(
                     nombre = nombreFinal,
                     ean = vista.productoOriginal.ean,
@@ -178,18 +159,19 @@ class RevisionActivity : AppCompatActivity() {
                     lineaTicketDao = db.lineaTicketDao(),
                     productoDao = db.productoDao(),
                     registroPrecioDao = db.registroPrecioDao(),
+                    alertaDao = db.alertaDao(),
                     hogarManager = hogarManager
                 )
 
-                // Usar el ID del supermercado Caprabo La Massana (ID 1, creado por DatabaseSeeder)
-                // En fases posteriores el usuario podrá elegir el supermercado
+                // Supermercado ID 1 = Caprabo La Massana (creado por DatabaseSeeder)
                 val supermercadoId = 1L
 
                 val ticketId = useCase.guardar(
                     supermercadoId = supermercadoId,
                     totalTicket = resultado.totalTicket,
                     textoOcr = resultado.textoOriginal,
-                    productos = productosConfirmados
+                    productos = productosConfirmados,
+                    nombreSupermercado = resultado.supermercado
                 )
 
                 mostrarExito(productosConfirmados.size, ticketId)
@@ -203,9 +185,8 @@ class RevisionActivity : AppCompatActivity() {
     }
 
     private fun mostrarExito(numProductos: Int, ticketId: Long) {
-        val mensaje = "✅ Ticket guardado: $numProductos productos (ID: $ticketId)"
+        val mensaje = "✅ Ticket #$ticketId guardado — $numProductos productos"
         Snackbar.make(findViewById(android.R.id.content), mensaje, Snackbar.LENGTH_LONG).show()
-
         btnConfirmar.postDelayed({
             val intent = Intent(this, DashboardActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP

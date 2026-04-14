@@ -16,20 +16,10 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.snackbar.Snackbar
 import com.preciofacil.app.data.remote.HogarManager
 
-/**
- * DashboardActivity — pantalla principal de PrecioFácil.
- *
- * Muestra datos reales desde Room:
- *  - Gasto del mes en curso
- *  - Número de tickets este mes
- *  - Último ticket escaneado
- *  - Lista de supermercados configurados
- */
 class DashboardActivity : AppCompatActivity() {
 
     private lateinit var hogarManager: HogarManager
 
-    // ── VISTAS ────────────────────────────────────────────────────────
     private lateinit var toolbar: MaterialToolbar
     private lateinit var txtSaludo: TextView
     private lateinit var txtCodigoHogar: TextView
@@ -43,11 +33,8 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var listaSupermercados: RecyclerView
     private lateinit var txtSinSupermercados: TextView
 
-    // ── VIEWMODEL Y ADAPTER ───────────────────────────────────────────
     private lateinit var viewModel: DashboardViewModel
     private lateinit var adapter: SupermercadoAdapter
-
-    // ─────────────────────────────────────────────────────────────────
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,12 +58,8 @@ class DashboardActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Recargar datos cada vez que se vuelve al Dashboard
-        // (por ejemplo, después de confirmar un ticket)
         viewModel.cargarDatosMes()
     }
-
-    // ── INICIALIZACIÓN ────────────────────────────────────────────────
 
     private fun inicializarVistas() {
         toolbar = findViewById(R.id.toolbar)
@@ -91,7 +74,6 @@ class DashboardActivity : AppCompatActivity() {
         cardAjustes = findViewById(R.id.cardAjustes)
         listaSupermercados = findViewById(R.id.listaSupermercados)
         txtSinSupermercados = findViewById(R.id.txtSinSupermercados)
-
         setSupportActionBar(toolbar)
     }
 
@@ -106,15 +88,12 @@ class DashboardActivity : AppCompatActivity() {
         txtCodigoHogar.text = if (codigo != null) "Hogar: $codigo" else "Hogar: no configurado"
     }
 
-    // ── OBSERVAR DATOS REALES ─────────────────────────────────────────
-
     private fun observarDatos() {
         // Supermercados
         viewModel.supermercados.observe(this) { lista ->
             if (lista.isNullOrEmpty()) {
                 listaSupermercados.visibility = View.GONE
                 txtSinSupermercados.visibility = View.VISIBLE
-                txtSinSupermercados.text = "No hay supermercados configurados."
             } else {
                 listaSupermercados.visibility = View.VISIBLE
                 txtSinSupermercados.visibility = View.GONE
@@ -138,31 +117,47 @@ class DashboardActivity : AppCompatActivity() {
 
         // Último ticket
         viewModel.ultimoTicket.observe(this) { texto ->
-            txtAlertas.text = texto
+            // Solo mostrar si no hay alertas
+        }
+
+        // Alertas no leídas — se muestran en la tarjeta de alertas
+        viewModel.alertasNoLeidas.observe(this) { alertas ->
+            if (alertas.isNullOrEmpty()) {
+                // Sin alertas — mostrar último ticket o mensaje neutro
+                val ultimoTexto = viewModel.ultimoTicket.value
+                    ?: "Sin alertas por ahora.\nEscanea tu primer ticket para empezar."
+                txtAlertas.text = ultimoTexto
+            } else {
+                // Mostrar las 3 alertas más recientes
+                val sb = StringBuilder()
+                alertas.take(3).forEach { alerta ->
+                    sb.appendLine(alerta.mensaje)
+                    if (alertas.indexOf(alerta) < minOf(2, alertas.size - 1)) {
+                        sb.appendLine("─────────────────")
+                    }
+                }
+                if (alertas.size > 3) {
+                    sb.append("+ ${alertas.size - 3} alertas más")
+                }
+                txtAlertas.text = sb.toString().trimEnd()
+            }
         }
     }
-
-    // ── BOTONES ───────────────────────────────────────────────────────
 
     private fun configurarBotones() {
         btnEscanear.setOnClickListener {
             startActivity(Intent(this, EscaneoActivity::class.java))
         }
-
         cardCatalogo.setOnClickListener {
             mostrarMensajeTemporal("Catálogo de productos — próximamente")
         }
-
         cardEstadisticas.setOnClickListener {
             mostrarMensajeTemporal("Estadísticas — próximamente")
         }
-
         cardAjustes.setOnClickListener {
             mostrarMensajeTemporal("Ajustes — próximamente")
         }
     }
-
-    // ── UTILIDADES ────────────────────────────────────────────────────
 
     private fun mostrarMensajeTemporal(mensaje: String) {
         Snackbar.make(findViewById(android.R.id.content), mensaje, Snackbar.LENGTH_SHORT).show()
